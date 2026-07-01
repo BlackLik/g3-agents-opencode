@@ -1,3 +1,6 @@
+---
+disable: true
+---
 # Agents — Orchestrated Agent System
 
 ## Purpose
