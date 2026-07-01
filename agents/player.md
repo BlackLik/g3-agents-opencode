@@ -4,10 +4,12 @@ description: "Lazy programmer — minimal code, no explanations, just implement 
 mode: subagent
 temperature: 0.6
 permission:
-    '*': deny
+    '*': allow
     bash: allow
     read: allow
     webfetch: allow
+    websearch: allow
+    lsp: allow
     task:
         '*': deny
         explore: allow

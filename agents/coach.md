@@ -4,13 +4,18 @@ description: "Maximally picky code reviewer — git diff analysis, cyber vulnera
 mode: subagent
 temperature: 0.2
 permission:
-    '*': deny
+    '*': allow
     task:
         '*': deny
         explore: allow
         coach: allow
     bash: allow
+    read: allow
+    grep: allow
     skill: allow
+    lsp: allow
+    websearch: allow
+    webfetch: allow
 ---
 
 # Coach — Zero Tolerance Reviewer
