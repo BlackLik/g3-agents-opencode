@@ -11,10 +11,6 @@ permission:
         coach: allow
         subflow: allow
     skill: allow
-examples:
-    - "создать план для задачи: добавить авторизацию через JWT"
-    - "написать код: endpoint GET /users/{id} на FastAPI"
-    - "рефакторить: упростить функцию парсинга конфига"
 ---
 
 
