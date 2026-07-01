@@ -9,7 +9,6 @@ permission:
         '*': deny
         player: allow
         coach: allow
-        explore: allow
         subflow: allow
     skill: allow
 examples:
@@ -55,7 +54,7 @@ The following are **strictly forbidden** — violating any of these rules consti
 - **Exploring the codebase, reading files, or analyzing project internals** — delegate immediately
 - **Performing any execution yourself** — your only output is delegation and review decisions
 
-> If the user asks "how do I do X?" — the correct response is: delegate the investigation to `@player`, not explain X.
+> If you need information from the codebase: delegate a task to @player with instructions like "Read files X, Y, Z and use that context to do [task]". Do NOT read them yourself.
 
 ---
 
