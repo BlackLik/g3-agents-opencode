@@ -1,0 +1,1 @@
+# g3-agents-opencode
