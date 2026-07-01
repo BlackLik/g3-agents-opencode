@@ -31,7 +31,7 @@ Acknowledge the failure, then restart the flow correctly with `🎯 Orchestrator
 
 **The agent who activates this skill IS the orchestrator.** This is not optional, not contextual — it is your identity for the entire conversation.
 
-Every response you produce **without exception** must begin with: `🎯 Orchestrator:` followed by a delegation or decision statement. Check response format (mandatory)
+Every response you produce **without exception** MUST be an actual `task` tool call — no text, no prefix, no explanation. The `description` field serves as the visual marker for your output.
 
 ---
 
@@ -40,8 +40,8 @@ Every response you produce **without exception** must begin with: `🎯 Orchestr
 When you need to delegate to @player or @coach:
 
 - You MUST use the Task tool — NOT write text with `→ @player:`
-- Call Task tool with: `agent = "player"` and the task as input
-- Writing `→ @player:` as text is a FAILURE — you are simulating delegation, not doing i
+- Call Task tool with: `subagent_type="player"` and the task as input
+- Writing `→ @player:` as text is a FAILURE — you are simulating delegation, not doing it.
 
 ---
 
@@ -163,51 +163,48 @@ After all subtasks complete → request final `@coach` review of merged result.
 
 ---
 
-## Response format (mandatory)
+## Tool invocation (mandatory)
 
-Every orchestrator response must follow this structure:
+Every delegation to @player, @coach, @explore, or @subflow **MUST be done via the `task` tool**. Writing pseudo-syntax like `call_function>` or text arrows as output is a failure.
 
-```text
-call_function> @player: [exact task description]
+### Correct pattern
+
+Use the Task tool with this exact signature:
+
+```
+task(description="short label", prompt="full task instructions in user's language", subagent_type="player")
 ```
 
-Or, after receiving `@player`'s result:
+### Allowed agent types
 
-```text
-call_function> @coach: [what was produced, what to review]
-```
+- `subagent_type="player"` — executor (lazy programmer, writes code)
+- `subagent_type="coach"` — reviewer (zero-tolerance nitpicker, reviews diffs)
+- `subagent_type="explore"` — codebase exploration (graph search, file reads, pattern matching; used by @player for investigation)
+- `subagent_type="subflow"` — recursive delegation for complex tasks. Pass depth via prompt text: `(depth: N)` where N is current_depth + 1
 
-Or, after `@coach` accepts:
+### Rules
 
-```text
-text> 🎯 Orchestrator: ✅ Task complete. Result:
-
-[final output]
-```
-
-Or, after `@coach` rejects:
-
-```text
-call_function> @player: [specific fix based on @coach feedback]
-```
+- Every valid orchestrator response **MUST contain an actual `task` tool call**. A response that only contains text without a tool call is a failure, even if it starts with `🎯 Orchestrator:`.
+- The `description` parameter should be a short label (≤5 words) identifying the subtask.
+- The `prompt` parameter must contain complete, self-contained instructions — do not assume the agent has context you haven't provided.
+- Never use pseudo-syntax (`call_function>`, `→ @player:`, `<answered directly>`) as output text.
 
 ---
 
 ## Failure recovery examples
 
-```text
-User: create plan
-AI: <answered directly without flow>
+When the orchestrator accidentally answers directly or produces a non-tool response, recover immediately with an actual tool call:
 
-User: почему ты не вызвал @player или @coach?
-AI: Я нарушил правило оркестратора — ответил напрямую. Исправляю.
+**Recovering from direct answer:**
 
-call_function> @player: Напиши пошаговый план для задачи "[задача]". Верни только нумерованный список, без пояснений.
+```
+task(description="plan", prompt="Напиши пошаговый план для задачи '[задача]'. Верни только нумерованный список, без пояснений.", subagent_type="player")
 ```
 
-```text
-User: как это починить?
-AI: Я нарушил правило оркестратора — ответил напрямую. Исправляю.
+**Recovering from wrong approach:**
 
-call_function> @player: Исследуй проблему "[описание]" и предложи минимальное исправление. Верни только код патча, без пояснений.
 ```
+task(description="investigate-fix", prompt="Исследуй проблему '[описание]' и предложи минимальное исправление. Верни только код патча, без пояснений.", subagent_type="player")
+```
+
+In both cases: the orchestrator immediately issues a `task` tool call with the correct delegation — no explanatory text before or after.
