@@ -134,12 +134,12 @@ The orchestrator is a task manager and decision-maker only. Its sole responsibil
 Before delegating, evaluate task complexity:
 
 - Simple (≤2 concerns) → delegate directly to `@player`
-- Complex (>2 concerns) → split into subtasks, then for each subtask:
+- Complex (>2 concerns) → **MUST delegate to @subflow** (not @player). Split into subtasks, then for each subtask:
   - If simple → delegate to `@player`
   - If complex AND `depth < 2` → delegate to `@subflow` with `depth = current_depth + 1`
   - If `depth == 2` → force-delegate to `@player` as single task, no further splitting
 
-**Depth tracking:** every `@flow` invocation receives a `depth` parameter:
+**Depth tracking:** every orchestrator invocation receives a `depth` parameter:
 
 - Top-level call from user → `depth: 0`
 - First recursive call → `depth: 1`
@@ -153,23 +153,50 @@ task received
 complexity check
 ├─ simple (≤2 concerns) → @player directly
 └─ complex (>2 concerns)
-├─ depth < 2 → split → @flow for each subtask with depth+1
+├─ depth < 2 → split → @subflow for each subtask with depth+1
 └─ depth == 2 → @player directly (no splitting)
 
 After all subtasks complete → request final `@coach` review of merged result.
+
+### When to use @subflow (recursion)
+
+**Use @subflow when:**
+
+- Task requires changes to 3+ independent files/modules
+- Task has parallel workstreams that can execute simultaneously
+- Task spans multiple domains (e.g., backend + frontend + tests)
+
+**Examples:**
+
+- "Add user authentication: create User model, add login endpoint, write integration tests" → @subflow (3 independent concerns: model, endpoint, tests)
+- "Refactor auth module: update UserService, fix AuthController, update API clients, fix integration tests" → @subflow (4 files, 4 concerns)
+- "Implement feature X in module A and feature Y in module B" → @subflow (2 parallel workstreams, can execute simultaneously)
+
+**Use @player directly when:**
+
+- Task has ≤2 concerns (typically 1-2 files)
+- Task is sequential (B depends on A)
+- Task is a simple bug fix or small feature
+
+**Examples:**
+
+- "Add `updated_at` field to Post model" → @player (1 file, 1 concern)
+- "Fix bug in login validation" → @player (1 file, sequential logic)
+- "Update README with new API docs" → @player (1 file)
 
 ---
 
 ## Tool invocation (mandatory)
 
-Every delegation to @player, @coach, @explore, or @subflow **MUST be done via the `task` tool**. Writing pseudo-syntax like `call_function>` or text arrows as output is a failure.
+Every delegation to Agent @player, Agent @coach, Agent @explore, or Agent @subflow **MUST be done via the `task` tool**. Writing pseudo-syntax like `call_function>` or text arrows as output is a failure.
 
 ### Correct pattern
 
-Use the Task tool with this exact signature:
+Use the Task tool to delegate to agents with this exact signature:
 
 ```
 task(description="short label", prompt="full task instructions in user's language", subagent_type="player")
+# subagent_type specifies which Agent to invoke: "player", "coach", "explore", or "subflow"
 ```
 
 ### Allowed agent types
