@@ -126,7 +126,7 @@ The orchestrator decomposes tasks by complexity and caps recursion at depth 2. A
 A depth system controls recursion:
 
 | Depth | Description | Behavior |
-|---|---|---|
+| --- | --- | --- |
 | **0** | Top-level task | Decomposition per rules below |
 | **1** | First recursion | Standard decomposition |
 | **2** | Second recursion (terminal) | Forced delegation directly to `@player` — no further splitting |
@@ -134,7 +134,7 @@ A depth system controls recursion:
 ## 📏 Task Decomposition Rules
 
 | Complexity | Depth < 2 | Depth == 2 |
-|---|---|---|
+| --- | --- | --- |
 | **Simple** (≤2 concerns) | Delegate directly to `@player` | Delegate to `@player` |
 | **Complex** (>2 concerns) | Split into subtasks, delegate each via `@flow` with depth+1 (`@subflow` — same thing, but runs as a subagent) | Force-delegate to `@player` |
 
