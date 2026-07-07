@@ -1,6 +1,6 @@
 # g3-agents-opencode — Multi-Agent Orchestration for OpenCode
 
-A set of agent configs (agents) for OpenCode with mediation, recursive task decomposition, and zero-tolerance review. This project **requires no dependency installation** — just open the `agents/` directory in a compatible runtime.
+A set of agent configs (agents) for OpenCode with mediation, recursive task decomposition, and zero-tolerance review. No dependency installation required.
 
 ## 📋 Purpose
 
@@ -8,7 +8,7 @@ The system implements mediated multi-agent orchestration: four roles interact th
 
 ## 🚀 Getting Started
 
-This project requires no dependency installation — just open the `agents/` directory in a compatible runtime (Claude Code or any runtime implementing OpenCode Skills). OpenCode automatically discovers agents via YAML front-matter.
+This project requires no dependency installation — once the `agents/` directory is in place, OpenCode automatically discovers agents via YAML front-matter in compatible runtimes (e.g. Claude Code, OpenCode Skills).
 
 Send tasks to `@flow` — the orchestrator handles decomposition and coordination. A realistic flow with revision cycles:
 
@@ -16,6 +16,94 @@ Send tasks to `@flow` — the orchestrator handles decomposition and coordinatio
 @flow → decomposition → @player (first version) → @coach → REVISE
 → @player (revised code) → @coach → ACCEPT
 → @flow collects results, requests merged review → done
+```
+
+## 📥 Installation
+
+### Global (all projects)
+
+Agents are installed to `~/.config/opencode/agents/` and available in every project.
+
+**macOS / Linux:**
+
+```bash
+tmpdir=$(mktemp -d) && \
+git clone https://github.com/BlackLik/g3-agents-opencode.git "$tmpdir" && \
+mkdir -p ~/.config/opencode/agents && \
+cp -r "$tmpdir/agents/" ~/.config/opencode/agents/ && \
+rm -rf "$tmpdir"
+```
+
+**Windows (PowerShell):**
+
+```powershell
+$tmpdir = New-TemporaryFile | ForEach-Object { Remove-Item $_; New-Item -ItemType Directory -Path $_ }
+git clone https://github.com/BlackLik/g3-agents-opencode.git $tmpdir
+New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.config\opencode\agents"
+Copy-Item -Path "$tmpdir\agents\*" -Destination "$env:USERPROFILE\.config\opencode\agents\" -Recurse -Force
+Remove-Item -Recurse -Force $tmpdir
+```
+
+### Local (current project)
+
+Agents are installed to `./agents/` in your project root.
+
+**macOS / Linux:**
+
+```bash
+tmpdir=$(mktemp -d) && \
+git clone https://github.com/BlackLik/g3-agents-opencode.git "$tmpdir" && \
+mkdir -p ./agents && \
+cp -r "$tmpdir/agents/" ./agents/ && \
+rm -rf "$tmpdir"
+```
+
+**Windows (PowerShell):**
+
+```powershell
+$tmpdir = New-TemporaryFile | ForEach-Object { Remove-Item $_; New-Item -ItemType Directory -Path $_ }
+git clone https://github.com/BlackLik/g3-agents-opencode.git $tmpdir
+New-Item -ItemType Directory -Force -Path "./agents"
+Copy-Item -Path "$tmpdir\agents\*" -Destination "./agents/" -Recurse -Force
+Remove-Item -Recurse -Force $tmpdir
+```
+
+> **Note:** Installation only copies/overwrites files from the repository — your existing agents are never deleted.
+
+## 🗑 Uninstall
+
+> **Caution:** These commands permanently delete files. Verify the path before running.
+
+### Global (all projects)
+
+Removes agents from `~/.config/opencode/agents/`.
+
+**macOS / Linux:**
+
+```bash
+rm -f ~/.config/opencode/agents/{AGENTS.md,flow.md,player.md,coach.md,subflow.md}
+```
+
+**Windows (PowerShell):**
+
+```powershell
+Remove-Item "$env:USERPROFILE\.config\opencode\agents\AGENTS.md", "$env:USERPROFILE\.config\opencode\agents\flow.md", "$env:USERPROFILE\.config\opencode\agents\player.md", "$env:USERPROFILE\.config\opencode\agents\coach.md", "$env:USERPROFILE\.config\opencode\agents\subflow.md" -ErrorAction SilentlyContinue
+```
+
+### Local (current project)
+
+Removes agents from `./agents/` in your project root.
+
+**macOS / Linux:**
+
+```bash
+rm -f ./agents/{AGENTS.md,flow.md,player.md,coach.md,subflow.md}
+```
+
+**Windows (PowerShell):**
+
+```powershell
+Remove-Item "./agents/AGENTS.md", "./agents/flow.md", "./agents/player.md", "./agents/coach.md", "./agents/subflow.md" -ErrorAction SilentlyContinue
 ```
 
 ## 🏗 Architecture

@@ -171,6 +171,7 @@ After all subtasks complete → request final `@coach` review of merged result.
 - "Add user authentication: create User model, add login endpoint, write integration tests" → @subflow (3 independent concerns: model, endpoint, tests)
 - "Refactor auth module: update UserService, fix AuthController, update API clients, fix integration tests" → @subflow (4 files, 4 concerns)
 - "Implement feature X in module A and feature Y in module B" → @subflow (2 parallel workstreams, can execute simultaneously)
+- "Remove deprecated API: delete old endpoints, update documentation, remove integration tests" → @subflow (3 concerns: endpoints, docs, tests)
 
 **Use @player directly when:**
 
