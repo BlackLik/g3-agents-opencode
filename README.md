@@ -1,6 +1,6 @@
-# g3-agents-opencode — Multi-Agent Orchestration for OpenCode
+# g3-agents — Multi-Agent Orchestration for OpenCode and Claude Code
 
-A set of agent configs (agents) for OpenCode with mediation, recursive task decomposition, and zero-tolerance review. No dependency installation required.
+A set of agent configs (agents) for OpenCode with mediation, recursive task decomposition, and zero-tolerance review. No dependency installation required. A Claude Code port of the same system ships in `.claude/agents/`.
 
 ## 📋 Purpose
 
@@ -8,11 +8,11 @@ The system implements mediated multi-agent orchestration: four roles interact th
 
 ## 🚀 Getting Started
 
-This project requires no dependency installation — once the `agents/` directory is in place, OpenCode automatically discovers agents via YAML front-matter in compatible runtimes (e.g. Claude Code, OpenCode Skills).
+This project requires no dependency installation — once the `.opencode/agents/` directory is in place, OpenCode automatically discovers agents via YAML front-matter in compatible runtimes (e.g. Claude Code, OpenCode Skills).
 
 Send tasks to `@flow` — the orchestrator handles decomposition and coordination. A realistic flow with revision cycles:
 
-```
+```text
 @flow → decomposition → @player (first version) → @coach → REVISE
 → @player (revised code) → @coach → ACCEPT
 → @flow collects results, requests merged review → done
@@ -20,95 +20,66 @@ Send tasks to `@flow` — the orchestrator handles decomposition and coordinatio
 
 ## 📥 Installation
 
-### Global (all projects)
+Use `scripts/install.sh` (macOS/Linux) or `scripts/install.ps1` (Windows). Interface:
 
-Agents are installed to `~/.config/opencode/agents/` and available in every project.
+```text
+scripts/install.sh <opencode|claude|all> [--global|--local]   # default: --global
+```
 
-**macOS / Linux:**
+| Tool | global | local |
+| --- | --- | --- |
+| opencode | `~/.config/opencode/agents/` | `./.opencode/agents/` |
+| claude | `~/.claude/agents/` | `./.claude/agents/` |
+
+From a clone of this repository:
+
+```bash
+scripts/install.sh opencode   # OpenCode, global
+scripts/install.sh claude     # Claude Code, global
+```
+
+Without keeping a clone (temporary directory):
 
 ```bash
 tmpdir=$(mktemp -d) && \
-git clone https://github.com/BlackLik/g3-agents-opencode.git "$tmpdir" && \
-mkdir -p ~/.config/opencode/agents && \
-cp -r "$tmpdir/agents/" ~/.config/opencode/agents/ && \
+git clone https://github.com/BlackLik/g3-agents.git "$tmpdir" && \
+"$tmpdir/scripts/install.sh" all && \
 rm -rf "$tmpdir"
 ```
 
 **Windows (PowerShell):**
 
 ```powershell
-$tmpdir = New-TemporaryFile | ForEach-Object { Remove-Item $_; New-Item -ItemType Directory -Path $_ }
-git clone https://github.com/BlackLik/g3-agents-opencode.git $tmpdir
-New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.config\opencode\agents"
-Copy-Item -Path "$tmpdir\agents\*" -Destination "$env:USERPROFILE\.config\opencode\agents\" -Recurse -Force
-Remove-Item -Recurse -Force $tmpdir
+scripts/install.ps1 opencode
+scripts/install.ps1 claude
 ```
 
-### Local (current project)
+> **Note:** Installation only copies/overwrites files from the repository —
+> your existing agents are never deleted.
 
-Agents are installed to `./agents/` in your project root.
-
-**macOS / Linux:**
-
-```bash
-tmpdir=$(mktemp -d) && \
-git clone https://github.com/BlackLik/g3-agents-opencode.git "$tmpdir" && \
-mkdir -p ./agents && \
-cp -r "$tmpdir/agents/" ./agents/ && \
-rm -rf "$tmpdir"
-```
-
-**Windows (PowerShell):**
-
-```powershell
-$tmpdir = New-TemporaryFile | ForEach-Object { Remove-Item $_; New-Item -ItemType Directory -Path $_ }
-git clone https://github.com/BlackLik/g3-agents-opencode.git $tmpdir
-New-Item -ItemType Directory -Force -Path "./agents"
-Copy-Item -Path "$tmpdir\agents\*" -Destination "./agents/" -Recurse -Force
-Remove-Item -Recurse -Force $tmpdir
-```
-
-> **Note:** Installation only copies/overwrites files from the repository — your existing agents are never deleted.
+In this repository the Claude Code port (`.claude/agents/`: flow, player,
+coach — no subflow, `flow` recurses into itself) is discovered automatically.
+Start with `claude --agent flow` to run the orchestrator as the main session.
 
 ## 🗑 Uninstall
 
-> **Caution:** These commands permanently delete files. Verify the path before running.
-
-### Global (all projects)
-
-Removes agents from `~/.config/opencode/agents/`.
-
-**macOS / Linux:**
+Same interface, removes only this project's files by explicit list:
 
 ```bash
-rm -f ~/.config/opencode/agents/{AGENTS.md,flow.md,player.md,coach.md,subflow.md}
+scripts/uninstall.sh opencode   # OpenCode, global
+scripts/uninstall.sh claude     # Claude Code, global
 ```
 
 **Windows (PowerShell):**
 
 ```powershell
-Remove-Item "$env:USERPROFILE\.config\opencode\agents\AGENTS.md", "$env:USERPROFILE\.config\opencode\agents\flow.md", "$env:USERPROFILE\.config\opencode\agents\player.md", "$env:USERPROFILE\.config\opencode\agents\coach.md", "$env:USERPROFILE\.config\opencode\agents\subflow.md" -ErrorAction SilentlyContinue
-```
-
-### Local (current project)
-
-Removes agents from `./agents/` in your project root.
-
-**macOS / Linux:**
-
-```bash
-rm -f ./agents/{AGENTS.md,flow.md,player.md,coach.md,subflow.md}
-```
-
-**Windows (PowerShell):**
-
-```powershell
-Remove-Item "./agents/AGENTS.md", "./agents/flow.md", "./agents/player.md", "./agents/coach.md", "./agents/subflow.md" -ErrorAction SilentlyContinue
+scripts/uninstall.ps1 opencode
+scripts/uninstall.ps1 claude
 ```
 
 ## 🏗 Architecture
 
-```
+```text
 User → @flow (orchestrator) → @player (executor) → @coach (reviewer)
          ↑                                                        │
          └──── @flow evaluates coach verdict: ACCEPT→done          ↓
@@ -140,13 +111,33 @@ A depth system controls recursion:
 
 ## 📂 File Structure
 
-```
-agents/
-├── AGENTS.md    — DOX contract for agents/ (rules, contracts, Child DOX Index)
-├── flow.md      — Orchestrator (primary agent)
-├── player.md    — Executor (subagent, minimalist executor)
-├── coach.md     — Reviewer (subagent, zero-tolerance reviewer)
-└── subflow.md   — Recursive orchestrator (subagent, identical to flow.md except for mode field)
+```text
+AGENTS.md              — Root DOX contract (repo-wide rules, Child DOX Index)
+LICENSE
+README.md
+.markdownlint-cli2.jsonc — Markdown lint config
+
+.opencode/             — OpenCode (reference implementation)
+├── AGENTS.md    — DOX contract for the agents (rules, contracts, Child DOX Index)
+└── agents/
+    ├── flow.md      — Orchestrator (primary agent)
+    ├── player.md    — Executor (subagent, minimalist executor)
+    ├── coach.md     — Reviewer (subagent, zero-tolerance reviewer)
+    └── subflow.md   — Recursive orchestrator (subagent, identical to flow.md except for mode field)
+
+.claude/               — Claude Code port
+├── AGENTS.md    — DOX contract for the port (divergences, sync rules)
+└── agents/
+    ├── flow.md      — Orchestrator (recurses into itself — replaces subflow)
+    ├── player.md    — Executor
+    └── coach.md     — Reviewer (review-only tools enforced)
+
+scripts/               — Install/uninstall scripts for both ports
+├── AGENTS.md    — DOX contract (interface, path mapping, guarantees)
+├── install.sh   — install.sh <opencode|claude|all> [--global|--local]
+├── uninstall.sh — same interface, removes by explicit file list
+├── install.ps1  — Windows equivalent
+└── uninstall.ps1
 ```
 
 ## 🎯 Roles: Details
@@ -181,7 +172,7 @@ agents/
 
 ## 📊 Example Task Flow
 
-```
+```text
 User: "@flow: implement a REST API for user CRUD"
        │
        ▼
@@ -213,4 +204,4 @@ User: "@flow: implement a REST API for user CRUD"
 
 ## 📖 Related Documents
 
-- [`agents/AGENTS.md`](agents/AGENTS.md) — DOX contract: rules, contracts, Child DOX Index
+- [`.opencode/AGENTS.md`](.opencode/AGENTS.md) — DOX contract: rules, contracts, Child DOX Index

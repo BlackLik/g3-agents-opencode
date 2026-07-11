@@ -1,11 +1,10 @@
----
-disable: true
----
-# Agents — Orchestrated Agent System
+# .opencode — Orchestrated Agent System
 
 ## Purpose
 
 A mediated multi-agent system where an orchestrator (`@flow`) decomposes tasks and delegates to specialized agents: `@player` (executor), `@coach` (reviewer), and `@subflow` (recursive delegation for complex tasks). All communication flows through the orchestrator.
+
+The `agents/` directory is the **reference implementation** — the source of truth for role behavior across all ports (see Port Synchronization in the root AGENTS.md).
 
 ## Ownership
 
@@ -84,8 +83,3 @@ The orchestrator mediates every step of this cycle. This is not unidirectional d
 ## Verification
 
 ## Child DOX Index
-
-- `coach.md` — Zero-tolerance reviewer: git diff analysis, AI-code detection, vulnerability checks, anti-patterns, test scrutiny
-- `flow.md` — Primary orchestrator: task decomposition, mediated delegation loop to @player/@coach, recursive via @subflow with depth tracking
-- `player.md` — Lazy executor: minimal code, scope discipline, webfetch permitted, broken linters/tests → return upward
-- `subflow.md` — Identical to flow.md but with `mode: subagent`; required separately by OpenCode for distinct mode metadata

@@ -1,7 +1,7 @@
 ---
-name: subflow
-description: "Orchestrator subflow — agent delegation pattern with @player executor and @coach reviewer."
-mode: subagent
+name: flow
+description: "Orchestrator flow — agent delegation pattern with @player executor and @coach reviewer."
+mode: primary
 temperature: 0.1
 permission:
     '*': deny
@@ -195,7 +195,7 @@ Every delegation to Agent @player, Agent @coach, Agent @explore, or Agent @subfl
 
 Use the Task tool to delegate to agents with this exact signature:
 
-```
+```text
 task(description="short label", prompt="full task instructions in user's language", subagent_type="player")
 # subagent_type specifies which Agent to invoke: "player", "coach", "explore", or "subflow"
 ```
@@ -222,13 +222,13 @@ When the orchestrator accidentally answers directly or produces a non-tool respo
 
 **Recovering from direct answer:**
 
-```
+```text
 task(description="plan", prompt="Напиши пошаговый план для задачи '[задача]'. Верни только нумерованный список, без пояснений.", subagent_type="player")
 ```
 
 **Recovering from wrong approach:**
 
-```
+```text
 task(description="investigate-fix", prompt="Исследуй проблему '[описание]' и предложи минимальное исправление. Верни только код патча, без пояснений.", subagent_type="player")
 ```
 

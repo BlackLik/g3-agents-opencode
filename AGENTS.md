@@ -75,10 +75,22 @@ Default section order:
 5. Run existing verification when relevant
 6. Report any docs intentionally left unchanged and why
 
+## Port Synchronization
+
+- `.opencode/agents/*.md` (OpenCode reference) is the source of truth for role behavior
+- Any change to a role body must land in both ports in the same commit; each port's AGENTS.md keeps an explicit list of its known divergences from the reference (model: "Deliberate divergences" in `/.claude/AGENTS.md`)
+- Sync is manual — no automated check; a new divergence goes into the port's divergence list in the same commit
+
+## Verification
+
+- Run `npx markdownlint-cli2` from the repo root; must pass with 0 errors
+
 ## User Preferences
 
 When the user requests a durable behavior change, record it here or in the relevant child AGENTS.md
 
 ## Child DOX Index
 
-- `agents/` — OpenCode multi-agent orchestration; orchestrator (flow/subflow), lazy executor (player), zero-tolerance reviewer (coach). See `/agents/AGENTS.md` for domain-specific rules.
+- `.opencode/` — OpenCode multi-agent orchestration; orchestrator (flow/subflow), lazy executor (player), zero-tolerance reviewer (coach) in `agents/`. Reference implementation. See `/.opencode/AGENTS.md` for domain-specific rules.
+- `.claude/` — Claude Code port of the same system (flow/player/coach as Claude Code subagents; no subflow, flow recurses into itself). See `/.claude/AGENTS.md` for divergences and sync rules.
+- `scripts/` — install/uninstall scripts for both ports. See `/scripts/AGENTS.md`.

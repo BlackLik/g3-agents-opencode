@@ -1,0 +1,9 @@
+{
+  "globs": ["**/*.md"],
+  "config": {
+    // Prose and agent prompt bodies are not wrapped at 80 chars
+    "MD013": false
+  },
+  // CLAUDE.md is an @-include stub, not a standalone document
+  "ignores": ["CLAUDE.md"]
+}
