@@ -20,10 +20,11 @@ Claude Code analog of the OpenCode agent system in `/.opencode/agents/`. Same ro
 
 Dictated by the Claude Code subagent format (`.claude/agents/*.md` frontmatter):
 
-- **No `subflow.md`.** Claude Code has no per-file `mode: primary/subagent` split and allows nested Agent calls, so `flow` recurses into itself (`Agent(flow, player, coach)`). Depth rules (terminal at `depth: 2`) are unchanged and tracked via `(depth: N)` in prompts.
+- **No `subflow.md`.** Claude Code has no per-file `mode: primary/subagent` split and allows nested Agent calls, so `flow` recurses into itself (`Agent(flow, player, coach, explore)`). Depth rules (terminal at `depth: 2`) are unchanged and tracked via `(depth: N)` in prompts.
 - **No `temperature`.** Claude Code frontmatter does not support it; the OpenCode per-role temperatures (flow 0.1, coach 0.2, player 0.6) are dropped.
 - **`permission` maps → `tools:` allowlists.** Delegation targets are restricted with the `Agent(a, b)` tool syntax; coach additionally has no Edit/Write, enforcing review-only.
 - **`@explore` → built-in `Explore` agent**, invoked via the Agent tool.
+- **Flow calls Explore directly instead of via player for context-gathering.** The OpenCode reference now has flow delegating context-gathering to @explore directly via `subagent_type="explore"`. The Claude port mirrors this: flow calls the Explore agent directly (via `Agent(..., subagent_type="explore")`) rather than routing through player.
 - **Delegation uses the `Agent` tool** (Claude Code's name for OpenCode's `task` tool); same `description`/`prompt`/`subagent_type` signature.
 - **`flow.md` drops the skill-loading preamble** ("Load this skill FIRST" block, "activates this skill" wording) — here it is an agent definition, not a skill. The port also removes the `🎯 Orchestrator:` visual-prefix convention throughout the body (Self-Correction Protocol, Tool Call Enforcement) — delegation is enforced via Agent tool calls only.
 - **Frontmatter `description` is port-owned** — may diverge from the reference.

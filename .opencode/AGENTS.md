@@ -23,6 +23,8 @@ The orchestrator mediates all communication between user and agents. Agents neve
 
 **Exception:** flow.md embeds compact role definitions for @player and @coach (lines 83–119) as a convenience so that delegated sub-agents understand their contract when spawned from this file. This is intentional, not cross-referencing — it avoids circular doc dependencies.
 
+- **Flow delegates context-gathering to @explore directly** — when the orchestrator needs codebase context, it calls `subagent_type="explore"` directly, not via @player. This replaces the old pattern where @player called @explore internally.
+
 ### flow.md ↔ subflow.md duplication
 
 `subflow.md` body content is byte-identical to `flow.md`. OpenCode requires separate files because the `mode` field (primary vs subagent) is a per-file front-matter attribute that cannot be shared across files. This is not redundant documentation — it is required by the tooling. Subflow delegates identically but runs in a child context with incrementing depth.
@@ -53,7 +55,7 @@ This system is **open**: agents may reach outside the system for information or 
 
 - Every response MUST begin with `🎯 Orchestrator:` prefix — this is the only valid delegation or decision format. No exceptions.
 - **Never answer directly, write code, explain solutions, explore files, or perform execution.** The orchestrator's sole output is delegation and review decisions.
-- Always delegate to @player for implementation and @coach for review — never do work yourself.
+- Always delegate to @player for implementation, @explore for context-gathering, and @coach for review — never do work yourself.
 
 **Player (@player):**
 
@@ -66,19 +68,64 @@ This system is **open**: agents may reach outside the system for information or 
 - Reviews git diffs, detects AI-generated code fingerprints, checks all vulnerability categories (injection, auth bypass, SSRF, path traversal, crypto, deserialization), enforces necessity justification for any new code.
 - **Depth tracking mandatory:** Every delegated call MUST include current depth in task description using `(depth: N)` format. Max depth: 2 (depth 1 → depth 2 → STOP). Rule of thumb: if sub-task fits in one sentence, review inline — no recursion.
 
+### Scope aggregation
+
+**Orchestrator (@flow / @subflow):**
+
+- **Aggregate task scope into coherent prompts** — before delegating to @player, aggregate related commands, reads, and context into one coherent prompt. Do not pass raw CLI commands or unprocessed exploration output.
+- **No raw passthrough** — always scope and contextualize the task for @player. The orchestrator is responsible for turning exploration results into actionable task instructions.
+
+### Review routing
+
+**Orchestrator (@flow / @subflow):**
+
+- **Keyword-based routing to @coach** — tasks whose description or prompt contains "review", "check", "verify", "audit", or "validate" MUST use `subagent_type="coach"`. Do not route review-type work to @player.
+- **Player rejection of review tasks** — if @player receives a review-oriented task, it must reject with "This is a review task — routing to @coach".
+
+### Recursive splitting
+
+**Orchestrator (@flow / @subflow):**
+
+- **Split into independent subtasks** — when delegating recursively, split the request into N independent subtasks. The prompt MUST NOT contain the full unsplit request; each subtask defines its own scope, success criteria, and output format.
+- **Subtask boundary clarity** — each subtask prompt must clearly define: (a) scope of work, (b) success criteria, (c) expected output format.
+
+### Post-recursion review
+
+**Orchestrator (@flow / @subflow):**
+
+- **Coach review after each recursion level** — after all subtasks at a recursion level complete and are merged, invoke @coach before proceeding to the next level.
+- **Coach rejection blocks progression** — if @coach rejects at any recursion level, create revision tasks until accepted. No progression without coach approval.
+- **Level-scoped coach prompts** — include level-scoping information in coach prompts (e.g., "Review only the depth-2 subtask outputs: ...").
+
+### Coach fresh review
+
+**Coach (@coach):**
+
+- **Binary verdict only** — coach issues only ✅ Accepted or ❌ Rejected. No conditional approval patterns ("Accepted if...", "Approved pending...").
+- **Review from scratch each time** — no carry-forward assumptions. Each review is independent of previous reviews.
+- **Identify what and why, but do not prescribe code fixes** — coach identifies problems and explains why they are problems, but does not write or prescribe specific code fixes.
+
+### Cycle priority
+
+**Orchestrator (@flow / @subflow):**
+
+- **Full mediated cycle enforced unconditionally** — EVERY task, regardless of perceived simplicity, goes through the full cycle: player → coach → deliver.
+- **No direct answers** — every user-facing response goes through the mediated cycle. The orchestrator never answers the user directly.
+- **No skipping coach review** — coach review is mandatory for every task. On rejection, repeat the cycle until accepted.
+
 ### Workflow loop (mediated cycle)
 
 The orchestrator controls a repeating delegation cycle:
 
-1. **Orchestrator** receives request → decomposes if needed → delegates to `@player`
+1. **Orchestrator** receives request → decomposes if needed → gathers context via @explore (directly) → aggregates scope → delegates to `@player`
 2. **`@player`** executes and returns result
 3. **Orchestrator** passes result to `@coach` for review
-4. **`@coach`** responds:
+4. **`@coach`** responds with binary verdict:
    - ✅ Accepted — orchestrator moves to next task
    - ❌ Rejected — orchestrator sends `@player` a revision task with specific coach feedback
 5. Repeat steps 2–4 until the task is fully complete
 
-The orchestrator mediates every step of this cycle. This is not unidirectional delegation — it is a mediated loop where the orchestrator gates transitions between player work and coach review.
+The orchestrator mediates every step of this cycle. This is not unidirectional delegation — it is a mediated loop where the orchestrator gates transitions between player work and coach review. The cycle is enforced unconditionally for EVERY task.
 
 ## Verification
 

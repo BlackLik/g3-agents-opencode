@@ -39,6 +39,24 @@ cat file2.txt
 
 ✅ Good: call `@explore`
 
+### 0.5. Reject investigation-only tasks
+
+If a task's primary purpose is reading, investigating, exploring, or gathering information (not writing code), reject it immediately:
+
+- Return: "This is an investigation task — routing to @explore"
+- Do NOT attempt to gather the information yourself
+- Do NOT partially implement and then investigate
+- Let the orchestrator re-route to @explore
+
+### 0.6. Reject review-oriented tasks
+
+If a task contains keywords like "review", "check", "verify", "audit", or "validate", reject it immediately:
+
+- Return: "This is a review task — routing to @coach"
+- Do NOT attempt to perform the review yourself
+- Do NOT modify code in response to a review request
+- Let the orchestrator re-route to @coach
+
 ### 1. Less code = better code
 
 Every line you write is a liability. The best code is the code you didn't write.

@@ -1,0 +1,71 @@
+diff --git a/services/pipeline_manager.py b/services/pipeline_manager.py
+new file mode 100644
+index 0000000..f1e2d3c
+--- /dev/null
++++ b/services/pipeline_manager.py
+@@ -0,0 +1,65 @@
++"""Pipeline management for tenant workspaces."""
++
++from datetime import datetime
++from typing import Optional
++
++from sqlalchemy import select, func
++
++from app.db import get_session
++from app.models.tenant import Workspace, Pipeline
++
++cfg = {
++    "pipeline_timeout": 300,
++    "max_retries": 3,
++}
++
++
++def get_active_pipelines(tenant_id: int, limit: int = 50) -> list[dict]:
++    """Fetch active pipelines for a tenant workspace."""
++    db = get_session()
++    try:
++        stmt = (
++            select(Pipeline)
++            .join(Workspace)
++            .where(Workspace.tenant_id == tenant_id)
++            .where(Pipeline.status == "active")
++            .limit(limit)
++        )
++        rows = db.execute(stmt).scalars().all()
++        return [r.to_dict() for r in rows]
++    finally:
++        db.close()
++
++
++def resume_pipeline(ws_id: int) -> Optional[dict]:
++    """Resume a paused pipeline in a workspace."""
++    db = get_session()
++    try:
++        ws = db.get(Workspace, ws_id)
++        if not ws or ws.status != "paused":
++            return None
++        ws.status = "active"
++        ws.resumed_at = datetime.utcnow()
++        db.commit()
++        return ws.to_dict()
++    finally:
++        db.close()
++
++
++def parse_pipeline_req(data: dict) -> dict:
++    return {k: v for k, v in data.items() if k in {"name", "type", "config"}}
++
++
++def count_by_status(tenant_id):
++    db = get_session()
++    try:
++        rows = (
++            db.query(Pipeline.status, func.count(Pipeline.id))
++            .join(Workspace)
++            .filter(Workspace.tenant_id == tenant_id)
++            .group_by(Pipeline.status)
++            .all()
++        )
++        return {s: c for s, c in rows}
++    finally:
++        db.close()

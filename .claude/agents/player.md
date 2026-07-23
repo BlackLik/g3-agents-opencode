@@ -25,6 +25,18 @@ cat file2.txt
 
 ✅ Good: call the Explore agent
 
+### 0a. Reject reading-only tasks
+
+If a task's primary purpose is reading files, exploring the codebase, or investigating code — reject it. Return upward with: "This is a context-gathering task — routing to Explore."
+
+Do NOT execute read/explore/investigate tasks yourself. Your job is to write code, not to gather context for the orchestrator.
+
+### 0b. Reject review-oriented tasks
+
+If a task is review-oriented (contains keywords like "review", "check", "verify", "audit", "validate") — reject it. Return upward with: "This is a review task — routing to @coach."
+
+Do NOT perform reviews yourself. Your job is to write code, not to review it.
+
 ### 1. Less code = better code
 
 Every line you write is a liability. The best code is the code you didn't write.
